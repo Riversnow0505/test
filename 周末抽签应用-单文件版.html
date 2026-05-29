@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末抽签应用 v2</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .app-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    color: white;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+  .header p {
+    font-size: 14px;
+    opacity: 0.85;
+  }
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .icon { font-size: 18px; }
+
+  /* Time selector grid */
+  .time-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .time-option {
+    padding: 12px;
+    border: 2px solid #e8e8e8;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .time-option:hover {
+    border-color: #667eea;
+    background: #f8f7ff;
+  }
+  .time-option.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea15, #764ba215);
+  }
+  .time-option .label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  .time-option .desc {
+    font-size: 12px;
+    color: #888;
+  }
+  .time-option.selected .label { color: #667eea; }
+
+  /* Filter tags */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .filter-tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1.5px solid #e0e0e0;
+    background: white;
+    color: #666;
+    transition: all 0.2s;
+  }
+  .filter-tag:hover { border-color: #667eea; color: #667eea; }
+  .filter-tag.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+  }
+
+  /* City grid */
+  .city-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .city-card {
+    padding: 14px;
+    border: 2px solid #e8e8e8;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .city-card:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102,126,234,0.15);
+  }
+  .city-card.visited {
+    opacity: 0.5;
+  }
+  .city-card.visited::after {
+    content: "✓";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #4caf50;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .city-card .city-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  .city-card .city-info {
+    font-size: 12px;
+    color: #888;
+  }
+  .city-card .city-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .city-card .city-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: #f0f0ff;
+    color: #667eea;
+    border-radius: 4px;
+  }
+
+  /* Draw button */
+  .draw-btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+    margin-bottom: 16px;
+  }
+  .draw-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102,126,234,0.5);
+  }
+  .draw-btn:active { transform: translateY(0); }
+  .draw-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Result area */
+  .result-area {
+    text-align: center;
+    padding: 20px;
+  }
+  .result-destination {
+    font-size: 36px;
+    font-weight: 800;
+    color: #667eea;
+    margin: 10px 0;
+    animation: popIn 0.5s ease;
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .result-subtitle {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 16px;
+  }
+
+  /* View itinerary button */
+  .view-itinerary-btn {
+    padding: 10px 24px;
+    border: 2px solid #667eea;
+    border-radius: 10px;
+    background: white;
+    color: #667eea;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .view-itinerary-btn:hover {
+    background: #667eea;
+    color: white;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-content {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 800px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eee;
+  }
+  .modal-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+  }
+  .modal-close {
+    width: 32px; height: 32px;
+    border: none;
+    background: #f5f5f5;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+  }
+  .modal-close:hover { background: #eee; }
+
+  /* Itinerary timeline */
+  .day-section { margin-bottom: 20px; }
+  .day-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #667eea;
+    margin-bottom: 10px;
+    padding-left: 12px;
+    border-left: 3px solid #667eea;
+  }
+  .activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .activity-time {
+    font-size: 13px;
+    font-weight: 600;
+    color: #667eea;
+    min-width: 45px;
+    padding-top: 2px;
+  }
+  .activity-detail { flex: 1; }
+  .activity-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  .activity-desc {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.5;
+  }
+  .activity-food {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    background: #fff3e0;
+    color: #e65100;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+
+  /* Cost section */
+  .cost-section {
+    background: #f8f7ff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+  .cost-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  .cost-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+  .cost-item {
+    text-align: center;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+  }
+  .cost-item .cost-label {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  .cost-item .cost-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #667eea;
+  }
+  .cost-item.total {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+  }
+  .cost-item.total .cost-label,
+  .cost-item.total .cost-value { color: white; }
+
+  /* Tips */
+  .tips-section { margin-top: 16px; }
+  .tips-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  .tip-item {
+    font-size: 13px;
+    color: #555;
+    padding: 6px 0;
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .tip-item::before {
+    content: "•";
+    position: absolute;
+    left: 4px;
+    color: #667eea;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    justify-content: space-around;
+    padding: 12px;
+    background: #f8f7ff;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-item { text-align: center; }
+  .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #667eea;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #888;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #aaa;
+  }
+  .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .card { padding: 16px; }
+    .city-grid { grid-template-columns: repeat(2, 1fr); }
+    .cost-grid { grid-template-columns: repeat(3, 1fr); }
+    .header h1 { font-size: 22px; }
+    .result-destination { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Load data before Babel -->
+<script src="itinerary-data.js"></script>
+
+<script>
+// 纯JavaScript数据文件 - 不需要Babel编译
+// 周末抽签应用 - 20个城市行程数据
+
+window.ITINERARY_DATA = {
+  "漳州": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车16分钟到漳州站，打车10分钟到古城"},
+          {time: "15:00", title: "漳州古城漫步", desc: "逛明清古街，看红砖骑楼建筑群"},
+          {time: "16:30", title: "南山寺", desc: "千年古刹，闽南著名佛教寺院"},
+          {time: "18:00", title: "古城美食", desc: "四果汤、卤面、海蛎煎、片仔癀甘蔗汁", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:00", title: "出发前往南靖土楼", desc: "包车/拼车约1.5小时到田螺坑"},
+          {time: "10:00", title: "田螺坑土楼群", desc: "四菜一汤经典造型，世界文化遗产"},
+          {time: "11:30", title: "裕昌楼", desc: "东倒西歪楼，700年历史"},
+          {time: "12:30", title: "土楼农家菜", desc: "客家酿豆腐、笋干炒肉、土鸡汤", food: true},
+          {time: "14:00", title: "云水谣古镇", desc: "和贵楼、怀远楼，电影取景地"},
+          {time: "16:30", title: "古道溪边漫步", desc: "百年榕树群、鹅卵石古道"},
+          {time: "18:00", title: "返回漳州市区", desc: "车程约1.5小时"},
+          {time: "19:30", title: "晚餐", desc: "漳州特色：生烫、豆花粉丝", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "林语堂纪念馆", desc: "文学大师纪念馆，花园式建筑"},
+          {time: "10:30", title: "闽南花卉市场", desc: "全国最大水仙花产地，可买盆栽"},
+          {time: "12:00", title: "午餐后返程", desc: "漳州站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "土楼建议拼车前往，人均50-60元，比班车灵活",
+      "古城四果汤推荐阿芳卤面旁的小摊",
+      "云水谣门票含和贵楼+怀远楼，90元",
+      "夏季注意防晒，土楼景区遮阴较少"
+    ],
+    cost: {"交通": 40, "住宿": 200, "餐饮": 150, "门票": 100, "总计": 490}
+  },
+  "泉州": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车26分钟到泉州站"},
+          {time: "15:00", title: "开元寺", desc: "东西双塔，千年古刹，福建省内规模最大佛教寺院"},
+          {time: "16:30", title: "西街", desc: "泉州最古老的街道，各种小吃和文创店"},
+          {time: "17:30", title: "钟楼打卡", desc: "泉州地标建筑，东西街交汇处"},
+          {time: "18:30", title: "西街美食", desc: "面线糊、肉粽、土笋冻、润饼菜", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:00", title: "清源山", desc: "老君岩造像，中国现存最大道教石雕"},
+          {time: "10:00", title: "南台岩", desc: "俯瞰泉州城全景"},
+          {time: "11:30", title: "下山午餐", desc: "牛肉羹、咸饭、石花膏", food: true},
+          {time: "13:00", title: "关帝庙", desc: "闽南香火最旺的庙宇，建筑精美"},
+          {time: "14:00", title: "清净寺", desc: "中国现存最古老的伊斯兰教寺"},
+          {time: "15:00", title: "蟳埔村", desc: "蚵壳厝特色建筑，体验簪花围"},
+          {time: "17:00", title: "洛阳桥", desc: "中国四大古桥之一，跨海梁式石桥"},
+          {time: "19:00", title: "晚餐", desc: "姜母鸭、烧肉粽、元宵圆", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "海外交通史博物馆", desc: "了解泉州作为海上丝绸之路起点"},
+          {time: "10:30", title: "府文庙", desc: "中国东南地区最大的文庙建筑群"},
+          {time: "12:00", title: "午餐后返程", desc: "泉州站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "蟳埔簪花围体验约40元，建议提前预约",
+      "开元寺免门票，清源山门票50元",
+      "西街面线糊推荐水门国仔老店",
+      "泉州半城烟火半城仙，寺庙多需尊重礼仪"
+    ],
+    cost: {"交通": 54, "住宿": 250, "餐饮": 160, "门票": 80, "总计": 544}
+  },
+  "莆田": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车36分钟到莆田站"},
+          {time: "15:00", title: "湄洲岛码头", desc: "大巴到文甲码头，乘轮渡上岛（15分钟）"},
+          {time: "16:30", title: "妈祖祖庙", desc: "世界妈祖信仰中心，进香祈福"},
+          {time: "18:00", title: "湄洲岛晚餐", desc: "海鲜大排档，推荐红鲟糯米饭", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:00", title: "湄洲岛日出", desc: "黄金沙滩看日出，摄影绝佳"},
+          {time: "09:30", title: "鹅尾海蚀地质公园", desc: "海蚀地貌奇观，栈道观景"},
+          {time: "11:00", title: "午餐", desc: "岛上海鲜面、炒米粉", food: true},
+          {time: "12:30", title: "轮渡返回", desc: "文甲码头回莆田市区"},
+          {time: "14:00", title: "九鲤湖", desc: "九漈瀑布群，福建三绝之一（车程约1小时）"},
+          {time: "16:00", title: "九鲤湖漫步", desc: "湖光山色，祈梦文化"},
+          {time: "18:00", title: "返回莆田市区", desc: "车程约1小时"},
+          {time: "19:30", title: "莆田卤面", desc: "正宗莆田卤面，兴化米粉", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "广化寺", desc: "全国三大模范丛林之一"},
+          {time: "10:30", title: "木兰陂", desc: "中国古代大型水利工程"},
+          {time: "12:00", title: "午餐后返程", desc: "莆田站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "湄洲岛轮渡往返110元，含进岛门票",
+      "岛上租电动车60元/天，方便出行",
+      "九鲤湖门票50元，瀑布水量雨季最佳",
+      "莆田卤面推荐市区老字号"
+    ],
+    cost: {"交通": 160, "住宿": 220, "餐饮": 180, "门票": 160, "总计": 720}
+  },
+  "福州": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车57分钟到福州站"},
+          {time: "15:30", title: "三坊七巷", desc: "中国里坊制度活化石，明清建筑博物馆"},
+          {time: "17:00", title: "林则徐纪念馆", desc: "了解民族英雄生平事迹"},
+          {time: "18:00", title: "达明美食街", desc: "福州小吃：鱼丸、肉燕、锅边糊", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "07:00", title: "出发去平潭岛", desc: "大巴约2小时到平潭（或自驾1.5小时）"},
+          {time: "09:30", title: "龙王头沙滩", desc: "平潭最大海滩，蓝眼泪观测点"},
+          {time: "10:30", title: "仙人井", desc: "海蚀奇观，天然海蚀竖井"},
+          {time: "12:00", title: "午餐", desc: "平潭特色时来运转、茹粉结", food: true},
+          {time: "13:30", title: "北港村", desc: "石头厝群落，文创小村"},
+          {time: "15:00", title: "猴研岛", desc: "祖国大陆距台湾最近点（68海里）"},
+          {time: "17:00", title: "长江澳风车田", desc: "最美日落观赏点，风车+海滩"},
+          {time: "19:00", title: "返回福州市区", desc: "车程约2小时"},
+          {time: "21:00", title: "宵夜", desc: "福州鱼丸+捞化", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "鼓山", desc: "涌泉寺、喝水岩摩崖石刻"},
+          {time: "11:00", title: "上下杭", desc: "福州版江南水乡，文艺街区"},
+          {time: "12:30", title: "午餐后返程", desc: "福州站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "平潭蓝眼泪4-8月出现，需关注潮汐和天气",
+      "平潭建议自驾或包车，公交不太方便",
+      "三坊七巷主街商业化，建议逛支巷",
+      "福州鱼丸推荐永和鱼丸"
+    ],
+    cost: {"交通": 252, "住宿": 280, "餐饮": 180, "门票": 60, "总计": 772}
+  },
+  "龙岩": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约1小时到龙岩站"},
+          {time: "15:30", title: "龙岩市区", desc: "入住酒店，稍作休息"},
+          {time: "16:30", title: "龙岩洞", desc: "龙岩地名由来，喀斯特溶洞"},
+          {time: "18:00", title: "龙岩晚餐", desc: "客家清汤粉、牛肉丸、簸箕粄", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "07:30", title: "出发前往永定土楼", desc: "车程约1小时"},
+          {time: "09:00", title: "洪坑土楼群", desc: "振成楼（土楼王子）、福裕楼、如升楼"},
+          {time: "11:00", title: "高北土楼群", desc: "承启楼（土楼王），圈数最多最大的土楼"},
+          {time: "12:30", title: "客家午餐", desc: "梅菜扣肉、酿豆腐、客家米酒", food: true},
+          {time: "14:00", title: "初溪土楼群", desc: "最原生态的土楼群，五座方圆土楼"},
+          {time: "16:00", title: "南溪土楼沟", desc: "沿溪而建的土楼长廊，航拍绝佳"},
+          {time: "18:00", title: "返回龙岩市区", desc: "车程约1.5小时"},
+          {time: "19:30", title: "晚餐", desc: "龙岩特色长汀泡猪腰", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "长汀古城", desc: "客家首府，店头街、古城墙"},
+          {time: "11:00", title: "瞿秋白纪念馆", desc: "红色旅游经典景区"},
+          {time: "12:00", title: "午餐后返程", desc: "龙岩站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "永定土楼联票约140元，含洪坑+高北",
+      "建议包车游览各土楼群，一天约300元",
+      "承启楼最多时有600多户人家居住",
+      "长汀古城免门票，店头街小吃多"
+    ],
+    cost: {"交通": 106, "住宿": 200, "餐饮": 140, "门票": 140, "总计": 586}
+  },
+  "潮汕": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约1.5小时到潮汕站"},
+          {time: "16:00", title: "潮州古城", desc: "牌坊街、开元寺，古城漫步"},
+          {time: "17:30", title: "广济桥", desc: "中国四大古桥之一，过河拆桥奇观"},
+          {time: "18:30", title: "潮州美食", desc: "牛肉火锅、粿条、鸭母捻", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:30", title: "西湖公园", desc: "潮州西湖，晨练散步"},
+          {time: "09:30", title: "许驸马府", desc: "宋代府第建筑，潮州古建筑精华"},
+          {time: "11:00", title: "己略黄公祠", desc: "潮州木雕艺术巅峰之作"},
+          {time: "12:00", title: "午餐", desc: "潮汕卤鹅、砂锅粥、蚝烙", food: true},
+          {time: "14:00", title: "前往汕头", desc: "大巴约1小时到汕头"},
+          {time: "15:30", title: "汕头小公园", desc: "骑楼建筑群，百载商埠"},
+          {time: "17:00", title: "汕头轮渡", desc: "广场轮渡看内海湾日落"},
+          {time: "18:30", title: "汕头牛肉火锅", desc: "八合里海记或杏花吴记，鲜切牛肉", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "南澳岛", desc: "广东最美海岛，跨海大桥直达"},
+          {time: "10:30", title: "青澳湾", desc: "东方夏威夷，天然海滨浴场"},
+          {time: "12:00", title: "海鲜午餐", desc: "南澳岛海鲜大排档", food: true},
+          {time: "14:00", title: "返程", desc: "南澳大桥返回，潮汕站动车回厦门"}
+        ]
+      }
+    ],
+    tips: [
+      "潮汕牛肉火锅建议中午去，晚上排队久",
+      "广济桥每天下午5点半开始收浮桥",
+      "潮州到汕头可坐公交K1线，方便便宜",
+      "南澳岛过桥费96元，建议自驾"
+    ],
+    cost: {"交通": 186, "住宿": 260, "餐饮": 200, "门票": 100, "总计": 746}
+  },
+  "汕尾": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约1小时51分到汕尾站"},
+          {time: "16:30", title: "入住酒店", desc: "建议住市区或金町湾附近"},
+          {time: "17:00", title: "凤山祖庙", desc: "妈祖文化景区，俯瞰汕尾港"},
+          {time: "18:30", title: "汕尾晚餐", desc: "擂茶、海鲜、菜粿", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:00", title: "红海湾", desc: "前往红海湾经济开发区（车程约40分钟）"},
+          {time: "09:00", title: "红海湾沙滩", desc: "广东最美海岸线之一，浪大适合冲浪"},
+          {time: "10:30", title: "风车岛", desc: "壮观的风车群+碧海蓝天，网红打卡地"},
+          {time: "12:00", title: "午餐", desc: "红海湾海鲜大排档", food: true},
+          {time: "13:30", title: "金町湾", desc: "保利金町湾，细白沙滩"},
+          {time: "15:30", title: "马宫港", desc: "渔港风情，可买新鲜海产"},
+          {time: "17:00", title: "日落观景", desc: "海边看日落"},
+          {time: "19:00", title: "晚餐", desc: "汕尾特色：薄饼、层糕粿", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "莲花山", desc: "鸡鸣寺，粤东佛教胜地"},
+          {time: "11:00", title: "市区闲逛", desc: "二马路老街，感受汕尾慢生活"},
+          {time: "12:00", title: "午餐后返程", desc: "汕尾站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "风车岛适合自驾，公共交通不便",
+      "红海湾浪大，注意安全，不建议下海游泳",
+      "汕尾海鲜便宜，建议去马宫港直接买",
+      "金町湾沙滩比红海湾更适合下水"
+    ],
+    cost: {"交通": 318, "住宿": 240, "餐饮": 180, "门票": 30, "总计": 768}
+  },
+  "三明泰宁": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约2小时到三明站，转车到泰宁"},
+          {time: "16:30", title: "泰宁古城", desc: "尚书第建筑群，明清古民居"},
+          {time: "18:00", title: "泰宁晚餐", desc: "大金湖有机鱼、泰宁豆腐", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:00", title: "寨下大峡谷", desc: "地质公园，丹霞地貌，峡谷栈道"},
+          {time: "10:00", title: "天穹岩", desc: "天然岩洞，峡谷奇观"},
+          {time: "11:30", title: "午餐", desc: "泰宁农家菜", food: true},
+          {time: "13:00", title: "大金湖", desc: "乘船游湖，看甘露寺（水上佛寺）"},
+          {time: "15:00", title: "斜线天", desc: "一线天奇观"},
+          {time: "16:30", title: "猫儿山", desc: "国家森林公园，登高望远"},
+          {time: "18:30", title: "晚餐", desc: "泰宁特色：暖菇包、碧玉卷", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "上清溪", desc: "竹筏漂流，丹霞山水画廊"},
+          {time: "11:00", title: "明清园", desc: "收藏大量明清古建筑的私家园林"},
+          {time: "12:30", title: "午餐后返程", desc: "泰宁站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "寨下大峡谷+大金湖联票约200元",
+      "上清溪竹筏约100元/人，需提前预约",
+      "泰宁各景区较分散，建议包车",
+      "大金湖游船约2.5小时，带好防晒"
+    ],
+    cost: {"交通": 240, "住宿": 220, "餐饮": 150, "门票": 300, "总计": 910}
+  },
+  "宁德": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约2小时到宁德站"},
+          {time: "16:30", title: "前往霞浦", desc: "大巴约1.5小时到霞浦"},
+          {time: "18:00", title: "霞浦县城", desc: "入住酒店，逛太康路"},
+          {time: "19:00", title: "霞浦海鲜", desc: "霞浦海鲜大排档，生蚝、剑蛏", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "05:30", title: "北岐滩涂日出", desc: "中国最美滩涂日出，摄影圣地"},
+          {time: "08:00", title: "杨家溪", desc: "古榕树群，溪水清澈"},
+          {time: "10:00", title: "小皓海滩", desc: "滩涂光影，绝美日落拍摄点"},
+          {time: "12:00", title: "午餐", desc: "霞浦特色：闽南糊、米饺", food: true},
+          {time: "13:30", title: "东壁", desc: "悬崖上的渔村，海景壮观"},
+          {time: "15:00", title: "大京沙滩", desc: "霞浦最大沙滩，海水清澈"},
+          {time: "17:00", title: "东安渔排", desc: "海上威尼斯，渔排连成片"},
+          {time: "19:00", title: "晚餐", desc: "霞浦滩涂海鲜", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "08:00", title: "太姥山", desc: "海上仙都，峰林奇观（车程约1小时）"},
+          {time: "10:30", title: "太姥山核心景区", desc: "夫妻峰、一线天、一片瓦"},
+          {time: "12:00", title: "午餐后返程", desc: "太姥山站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "北岐日出需5点前到达，带三脚架",
+      "霞浦各景点分散，建议包车或自驾",
+      "太姥山门票+景交车约140元",
+      "杨家溪古榕树拍摄需烟雾弹效果更佳"
+    ],
+    cost: {"交通": 232, "住宿": 230, "餐饮": 170, "门票": 140, "总计": 772}
+  },
+  "武夷山": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约2小时9分到武夷山北站"},
+          {time: "16:30", title: "武夷山度假区", desc: "入住酒店，逛度假区"},
+          {time: "17:30", title: "印象大红袍", desc: "张艺谋导演山水实景演出（夜间）"},
+          {time: "19:30", title: "武夷山晚餐", desc: "熏鹅、大红袍茶宴", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:00", title: "九曲溪竹筏", desc: "武夷山精华，约1.5小时漂流"},
+          {time: "10:00", title: "武夷宫", desc: "宋街、万春园"},
+          {time: "11:00", title: "大红袍景区", desc: "六棵母树大红袍，茶文化"},
+          {time: "12:30", title: "午餐", desc: "武夷山特色：熏鹅、光饼", food: true},
+          {time: "14:00", title: "天游峰", desc: "武夷第一胜地，登顶俯瞰九曲溪"},
+          {time: "16:30", title: "桃源洞", desc: "幽谷秘境"},
+          {time: "18:00", title: "茶文化体验", desc: "品正宗大红袍、正山小种"},
+          {time: "19:30", title: "晚餐", desc: "武夷山农家菜", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "08:00", title: "虎啸岩", desc: "险峰奇石，好汉坡"},
+          {time: "10:00", title: "一线天", desc: "最窄处仅30厘米，体验钻洞"},
+          {time: "11:30", title: "水帘洞", desc: "武夷山最大的岩洞"},
+          {time: "12:30", title: "午餐后返程", desc: "武夷山北站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "九曲溪竹筏需提前一天预约，100元/人",
+      "武夷山三日联票约235元，含景区交通",
+      "天游峰较陡，约1.5小时登顶",
+      "印象大红袍演出票约238元，值得一看"
+    ],
+    cost: {"交通": 478, "住宿": 300, "餐饮": 200, "门票": 335, "总计": 1313}
+  },
+  "瑞金": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约2小时34分到瑞金站"},
+          {time: "17:00", title: "叶坪革命旧址群", desc: "中华苏维埃共和国临时中央政府旧址"},
+          {time: "18:30", title: "瑞金晚餐", desc: "瑞金牛肉汤、鱼饼、芋子饺", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:00", title: "红井景区", desc: "吃水不忘挖井人，红井打卡"},
+          {time: "09:30", title: "二苏大旧址", desc: "中华苏维埃第二次代表大会旧址"},
+          {time: "11:00", title: "中央革命根据地纪念馆", desc: "全面了解苏区历史"},
+          {time: "12:30", title: "午餐", desc: "瑞金特色客家菜", food: true},
+          {time: "14:00", title: "罗汉岩", desc: "丹霞地貌，赣南名山（车程约30分钟）"},
+          {time: "15:30", title: "罗汉岩核心景区", desc: "蜡烛峰、试剑石、一线天"},
+          {time: "17:30", title: "返回瑞金市区", desc: "车程约30分钟"},
+          {time: "19:00", title: "晚餐", desc: "瑞金特色：瑞金米酒", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "云石山", desc: "长征出发地，红军二万五千里起点"},
+          {time: "10:30", title: "瑞金市区闲逛", desc: "红都广场，感受红色文化"},
+          {time: "12:00", title: "午餐后返程", desc: "瑞金站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "瑞金红色景区大多免费，罗汉岩门票50元",
+      "各旧址之间有公交专线，方便游览",
+      "瑞金牛肉汤是必吃美食",
+      "建议带好防晒和饮用水"
+    ],
+    cost: {"交通": 360, "住宿": 180, "餐饮": 130, "门票": 50, "总计": 720}
+  },
+  "惠州": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约2小时28分到惠州南站"},
+          {time: "17:00", title: "西湖", desc: "惠州西湖，苏轼曾在此留下足迹"},
+          {time: "18:30", title: "水东街", desc: "骑楼老街，惠州版上下九"},
+          {time: "19:30", title: "惠州晚餐", desc: "梅菜扣肉、盐焗鸡、酿豆腐", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "07:30", title: "出发前往巽寮湾", desc: "车程约1.5小时"},
+          {time: "09:30", title: "巽寮湾沙滩", desc: "白金海岸，细白沙滩"},
+          {time: "10:30", title: "三角洲岛", desc: "快艇上岛，浮潜、海钓"},
+          {time: "12:30", title: "海鲜午餐", desc: "巽寮湾海鲜大排档", food: true},
+          {time: "14:00", title: "双月湾", desc: "双湾奇观，左湾平静右湾浪大"},
+          {time: "16:00", title: "海龟湾", desc: "中国大陆唯一海龟自然保护区"},
+          {time: "18:00", title: "港口镇日落", desc: "海边看日落"},
+          {time: "19:30", title: "晚餐", desc: "惠州特色：横沥汤粉", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "罗浮山", desc: "道教第七洞天，葛洪炼丹处（车程约1小时）"},
+          {time: "11:00", title: "罗浮山核心景区", desc: "冲虚古观、洗药池、飞云顶"},
+          {time: "12:30", title: "午餐后返程", desc: "惠州南站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "巽寮湾周末堵车严重，建议早出发",
+      "三角洲岛门票+船票约100元",
+      "罗浮山门票60元，索道70元",
+      "双月湾观景台在山顶，需爬约30分钟"
+    ],
+    cost: {"交通": 468, "住宿": 300, "餐饮": 200, "门票": 160, "总计": 1128}
+  },
+  "上饶": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约2小时42分到上饶站"},
+          {time: "17:00", title: "前往三清山脚下", desc: "大巴约2小时到三清山"},
+          {time: "19:00", title: "入住山下酒店", desc: "金沙服务区或外双溪"},
+          {time: "19:30", title: "晚餐", desc: "三清山特色：三清山土鸡", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "07:30", title: "三清山索道上山", desc: "金沙索道或外双溪索道"},
+          {time: "08:30", title: "南清园", desc: "巨蟒出山、东方女神，三清山标志性景观"},
+          {time: "10:30", title: "阳光海岸", desc: "高空栈道，绝美云海"},
+          {time: "12:00", title: "山上午餐", desc: "自带干粮或山上简餐", food: true},
+          {time: "13:30", title: "西海岸", desc: "玻璃栈道、高空观景台"},
+          {time: "15:30", title: "万寿园", desc: "祈福长寿，奇石林立"},
+          {time: "17:00", title: "索道下山", desc: "返回山脚"},
+          {time: "18:30", title: "晚餐", desc: "上饶特色：铅山烫粉", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "08:00", title: "望仙谷", desc: "悬崖上的仙侠世界（车程约1.5小时）"},
+          {time: "10:00", title: "望仙谷核心景区", desc: "悬崖民宿、峡谷栈道、瀑布群"},
+          {time: "12:00", title: "午餐后返程", desc: "上饶站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "三清山门票+索道约245元",
+      "山上全程步行约5-6小时，穿舒适运动鞋",
+      "望仙谷夜景最美，但时间不够可只看白天",
+      "建议住山下，山上住宿贵且条件一般"
+    ],
+    cost: {"交通": 582, "住宿": 280, "餐饮": 180, "门票": 345, "总计": 1387}
+  },
+  "赣州": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约2小时51分到赣州西站"},
+          {time: "17:30", title: "郁孤台", desc: "辛弃疾留下郁孤台下清江水名句"},
+          {time: "18:30", title: "江南宋城", desc: "宋代古城墙、四贤坊"},
+          {time: "19:30", title: "赣州晚餐", desc: "赣南小炒鱼、粉蒸肉、艾米果", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:00", title: "古浮桥", desc: "建于宋代，100多只小舟用缆绳连接"},
+          {time: "09:30", title: "建春门", desc: "赣州古城门之一"},
+          {time: "10:30", title: "灶儿巷", desc: "明清古街，保留大量古建筑"},
+          {time: "12:00", title: "午餐", desc: "赣州特色：宁都三杯鸡", food: true},
+          {time: "13:30", title: "通天岩", desc: "江南第一石窟，摩崖石刻"},
+          {time: "15:30", title: "八境台", desc: "章江贡江汇合处，赣州地标"},
+          {time: "17:00", title: "阳明山", desc: "王阳明知行合一悟道处（车程约1小时）"},
+          {time: "19:00", title: "返回市区晚餐", desc: "赣州特色美食", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "福寿沟博物馆", desc: "宋代城市排水系统，千年不涝"},
+          {time: "10:30", title: "赣州文庙", desc: "江西省保存最完整的文庙"},
+          {time: "12:00", title: "午餐后返程", desc: "赣州西站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "古浮桥免费，通天岩门票约60元",
+      "赣州景点集中在老城区，步行可达",
+      "郁孤台历史文化街区适合拍照",
+      "赣南脐橙季节（11-12月）必买"
+    ],
+    cost: {"交通": 306, "住宿": 220, "餐饮": 150, "门票": 60, "总计": 736}
+  },
+  "梅州": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约2.5小时到梅州西站"},
+          {time: "17:00", title: "梅州老城区", desc: "凌风路步行街，骑楼建筑"},
+          {time: "18:00", title: "客家博物馆", desc: "了解客家文化历史"},
+          {time: "19:00", title: "梅州晚餐", desc: "盐焗鸡、酿豆腐、梅菜扣肉", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:00", title: "雁南飞茶田", desc: "5A级景区，茶田梯田美景"},
+          {time: "10:00", title: "桥溪古韵", desc: "客家古村落，围龙屋建筑"},
+          {time: "11:30", title: "品茶体验", desc: "品尝梅州单丛茶"},
+          {time: "12:30", title: "午餐", desc: "客家盆菜、腌面、及第汤", food: true},
+          {time: "14:00", title: "叶剑英纪念园", desc: "元帅故居，客家围龙屋建筑"},
+          {time: "15:30", title: "灵光寺", desc: "千年古刹，生死树奇观"},
+          {time: "17:00", title: "返回梅州市区", desc: "车程约1小时"},
+          {time: "19:00", title: "晚餐", desc: "梅州特色：算盘子、笋粄", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "围龙屋", desc: "参观典型客家围龙屋建筑"},
+          {time: "10:30", title: "东山书院", desc: "梅州文教历史"},
+          {time: "12:00", title: "午餐后返程", desc: "梅州西站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "雁南飞茶田门票80元，含茶艺表演",
+      "梅州是世界客都，客家文化浓厚",
+      "盐焗鸡推荐正宗客家做法",
+      "梅州城区不大，打车方便"
+    ],
+    cost: {"交通": 260, "住宿": 200, "餐饮": 140, "门票": 80, "总计": 680}
+  },
+  "温州": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约3小时28分到温州南站"},
+          {time: "18:00", title: "五马街", desc: "温州最繁华的商业街，百年老街"},
+          {time: "19:00", title: "温州晚餐", desc: "糯米饭、鱼丸汤、灯盏糕", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "07:00", title: "出发前往雁荡山", desc: "大巴约1.5小时到雁荡山"},
+          {time: "09:00", title: "灵峰景区", desc: "日景+夜景双绝，合掌峰"},
+          {time: "10:30", title: "灵岩景区", desc: "飞渡表演（每天定时），小龙湫"},
+          {time: "12:00", title: "午餐", desc: "雁荡山特色：清江三鲜面", food: true},
+          {time: "13:30", title: "大龙湫", desc: "中国四大瀑布之一，落差197米"},
+          {time: "15:00", title: "方洞", desc: "悬崖栈道，天空之桥"},
+          {time: "16:30", title: "显胜门", desc: "天下第一门，天然石门"},
+          {time: "18:30", title: "返回温州市区", desc: "车程约1.5小时"},
+          {time: "20:00", title: "晚餐", desc: "温州海鲜排档", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "楠溪江", desc: "竹筏漂流，田园山水（车程约1小时）"},
+          {time: "11:00", title: "芙蓉古村", desc: "千年古村落，七星八斗布局"},
+          {time: "12:30", title: "午餐后返程", desc: "温州南站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "雁荡山联票约200元，含主要景区",
+      "灵岩飞渡表演上午10:30和下午15:30各一场",
+      "楠溪江竹筏约100元/人",
+      "温州糯米饭是必吃早餐"
+    ],
+    cost: {"交通": 386, "住宿": 280, "餐饮": 180, "门票": 300, "总计": 1146}
+  },
+  "金华": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约3.5小时到金华站"},
+          {time: "18:00", title: "入住酒店", desc: "建议住义乌或横店附近"},
+          {time: "19:00", title: "金华晚餐", desc: "金华火腿、金华酥饼", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "07:30", title: "出发前往横店", desc: "大巴约1小时到横店影视城"},
+          {time: "08:30", title: "明清宫苑", desc: "1:1复制故宫，穿越体验"},
+          {time: "10:30", title: "广州街·香港街", desc: "民国风情，演艺秀"},
+          {time: "12:00", title: "午餐", desc: "横店美食街", food: true},
+          {time: "13:00", title: "秦王宫", desc: "英雄取景地，气势恢宏"},
+          {time: "15:00", title: "梦幻谷", desc: "大型游乐场+暴雨山洪演出"},
+          {time: "17:30", title: "清明上河图", desc: "张择端画卷实景还原"},
+          {time: "19:00", title: "晚餐", desc: "横店特色：东阳沃面", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "08:00", title: "诸葛八卦村", desc: "全国最大诸葛亮后裔聚居地（车程约1小时）"},
+          {time: "10:00", title: "八卦村核心景区", desc: "按九宫八卦布局的古村落"},
+          {time: "12:00", title: "午餐后返程", desc: "金华站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "横店联票约480元（5景点），单买较贵",
+      "各景区之间有免费公交接驳",
+      "梦幻谷暴雨山洪演出不可错过",
+      "诸葛八卦村门票90元"
+    ],
+    cost: {"交通": 520, "住宿": 280, "餐饮": 160, "门票": 570, "总计": 1530}
+  },
+  "南昌": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约4小时到南昌西站"},
+          {time: "18:30", title: "滕王阁", desc: "落霞与孤鹜齐飞，秋水共长天一色"},
+          {time: "20:00", title: "秋水广场", desc: "亚洲最大音乐喷泉之一"},
+          {time: "20:30", title: "南昌晚餐", desc: "南昌拌粉、瓦罐汤、白糖糕", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:30", title: "八一起义纪念馆", desc: "了解南昌起义历史"},
+          {time: "10:00", title: "江西省博物馆", desc: "海昏侯国考古成果展"},
+          {time: "11:30", title: "绳金塔", desc: "南昌地标，千年古塔"},
+          {time: "12:30", title: "午餐", desc: "南昌特色：藜蒿炒腊肉", food: true},
+          {time: "14:00", title: "八大山人纪念馆", desc: "明末清初画家朱耷纪念馆"},
+          {time: "15:30", title: "梅岭", desc: "南昌后花园，避暑胜地"},
+          {time: "17:30", title: "赣江边散步", desc: "赣江风光带，看江景"},
+          {time: "19:00", title: "晚餐", desc: "南昌特色：鄱阳湖胖鱼头", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "滕王阁晨景", desc: "白天再登滕王阁，感受日景"},
+          {time: "10:30", title: "万寿宫", desc: "南昌道教圣地，商业街区"},
+          {time: "12:00", title: "午餐后返程", desc: "南昌西站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "滕王阁门票50元，夜景灯光秀更美",
+      "秋水广场喷泉每晚8点开始",
+      "南昌拌粉+瓦罐汤是标配早餐",
+      "动车4小时较长，建议带好充电宝"
+    ],
+    cost: {"交通": 816, "住宿": 280, "餐饮": 160, "门票": 100, "总计": 1356}
+  },
+  "抚州": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约3.5小时到抚州站"},
+          {time: "18:00", title: "拟岘台", desc: "抚州地标，曾巩曾在此写诗"},
+          {time: "19:00", title: "抚州晚餐", desc: "抚州泡粉、牛杂粉、临川菜", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "07:30", title: "出发前往大觉山", desc: "车程约1.5小时"},
+          {time: "09:30", title: "大觉山漂流", desc: "中国最佳漂流地之一，约2小时"},
+          {time: "12:00", title: "午餐", desc: "资溪面包+当地农家菜", food: true},
+          {time: "13:30", title: "大觉山古镇", desc: "仿古建筑群，玻璃栈道"},
+          {time: "15:00", title: "大觉岩寺", desc: "海拔千米的高山寺庙"},
+          {time: "16:30", title: "返回抚州市区", desc: "车程约1.5小时"},
+          {time: "18:30", title: "晚餐", desc: "抚州特色：南丰蜜桔、麻鸡", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "08:00", title: "流坑古村", desc: "千古第一村，董氏家族聚居地（车程约1.5小时）"},
+          {time: "10:00", title: "古村漫步", desc: "明清古建筑、状元楼、翰林楼"},
+          {time: "11:30", title: "文昌里", desc: "抚州历史街区，汤显祖故里"},
+          {time: "12:30", title: "午餐后返程", desc: "抚州站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "大觉山漂流约138元，夏季最佳",
+      "流坑古村门票60元，值得一看",
+      "抚州是才子之乡，汤显祖故里",
+      "资溪面包全国有名，当地最正宗"
+    ],
+    cost: {"交通": 560, "住宿": 200, "餐饮": 140, "门票": 198, "总计": 1098}
+  },
+  "东莞": {
+    baseDays: [
+      {
+        dayKey: "fri_afternoon",
+        dayLabel: "周五下午",
+        activities: [
+          {time: "14:00", title: "厦门出发", desc: "动车约3.5小时到东莞站"},
+          {time: "18:00", title: "可园", desc: "清代岭南名园，广东四大名园之一"},
+          {time: "19:00", title: "莞城老街", desc: "振华路、中兴路，老东莞风情"},
+          {time: "19:30", title: "东莞晚餐", desc: "厚街烧鹅濑粉、道滘裹蒸粽", food: true}
+        ]
+      },
+      {
+        dayKey: "sat",
+        dayLabel: "周六",
+        activities: [
+          {time: "08:30", title: "松山湖", desc: "华为欧洲小镇旁，骑行绿道"},
+          {time: "10:00", title: "松山湖骑行", desc: "租自行车环湖，约2小时"},
+          {time: "12:00", title: "午餐", desc: "东莞特色：白沙油鸭", food: true},
+          {time: "13:30", title: "虎门炮台", desc: "鸦片战争遗址，威远炮台"},
+          {time: "15:00", title: "海战博物馆", desc: "了解鸦片战争历史"},
+          {time: "16:30", title: "太平手袋厂陈列馆", desc: "中国三来一补工业发源地"},
+          {time: "18:00", title: "下坝坊", desc: "文艺清吧聚集地，东莞版鼓浪屿"},
+          {time: "19:30", title: "晚餐", desc: "东莞特色：塘厦碌鹅", food: true}
+        ]
+      },
+      {
+        dayKey: "sun",
+        dayLabel: "周日",
+        activities: [
+          {time: "09:00", title: "隐贤山庄", desc: "主题乐园+快活谷玻璃桥"},
+          {time: "11:00", title: "南社明清古村落", desc: "保存完好的岭南古村落"},
+          {time: "12:30", title: "午餐后返程", desc: "东莞站动车回厦门", food: true}
+        ]
+      }
+    ],
+    tips: [
+      "可园门票免费，松山湖骑行免费",
+      "松山湖自行车租赁约20元/天",
+      "虎门炮台免费，海战博物馆免费",
+      "东莞美食以烧鹅濑粉最为出名"
+    ],
+    cost: {"交通": 600, "住宿": 260, "餐饮": 160, "门票": 60, "总计": 1080}
+  }
+};
+
+window.DEPARTURE_OPTIONS = [
+  {value: "fri_morning", label: "周五全天", desc: "9:00出发\u00B7最充裕"},
+  {value: "fri_afternoon", label: "周五下午", desc: "14:00出发\u00B7请半天假"},
+  {value: "sat_morning", label: "周六上午", desc: "8:00出发\u00B7周末模式"},
+  {value: "sat_afternoon", label: "周六下午", desc: "14:00出发\u00B7半日游"}
+];
+
+window.RETURN_OPTIONS = [
+  {value: "sat_night", label: "周六晚上", desc: "21:00前到家\u00B7一日游"},
+  {value: "sun_morning", label: "周日上午", desc: "12:00前到家\u00B7一晚住宿"},
+  {value: "sun_afternoon", label: "周日下午", desc: "18:00前到家\u00B7一晚+半天"},
+  {value: "sun_night", label: "周日晚上", desc: "21:00前到家\u00B7两晚住宿"}
+];
+
+</script>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// City metadata (lightweight, kept in component)
+const CITY_META = {
+  "漳州": {train: "16min", price: 20, tags: ["土楼", "古城"]},
+  "泉州": {train: "26min", price: 27, tags: ["开元寺", "西街"]},
+  "莲田": {train: "36min", price: 80, tags: ["湄洲岛", "妈祖"]},
+  "福州": {train: "57min", price: 126, tags: ["三坊七巷", "平潭"]},
+  "龙岩": {train: "1h4m", price: 53, tags: ["土楼", "客家"]},
+  "潮汕": {train: "1.5h", price: 93, tags: ["火锅", "古城"]},
+  "汕尾": {train: "1h51m", price: 159, tags: ["风车岛", "海滩"]},
+  "三明泰宁": {train: "2h", price: 120, tags: ["丹霞", "湖泊"]},
+  "宁德": {train: "2h6m", price: 116, tags: ["滩涂", "太姆山"]},
+  "武夷山": {train: "2h9m", price: 239, tags: ["九曲溪", "天游峰"]},
+  "瑞金": {train: "2h34m", price: 180, tags: ["红色", "丹霞"]},
+  "惠州": {train: "2h28m", price: 234, tags: ["海滩", "罗浮山"]},
+  "上饶": {train: "2h42m", price: 291, tags: ["三清山", "望仙谷"]},
+  "赣州": {train: "2h51m", price: 153, tags: ["古城", "寺庙"]},
+  "梅州": {train: "2.5h", price: 130, tags: ["客家", "茶田"]},
+  "温州": {train: "3h28m", price: 193, tags: ["雁荡山", "楠溪江"]},
+  "金华": {train: "3.5h", price: 260, tags: ["横店", "古村"]},
+  "南昌": {train: "4h", price: 408, tags: ["滕王阁", "历史"]},
+  "抚州": {train: "3.5h", price: 280, tags: ["漂流", "古村"]},
+  "东莞": {train: "3.5h", price: 300, tags: ["可园", "松山湖"]}
+};
+
+const DISTANCE_TAGS = ["近郊", "中程", "远程"];
+const DISTANCE_MAP = {
+  "近郊": ["漳州", "泉州", "莲田", "福州", "龙岩", "潮汕"],
+  "中程": ["汕尾", "三明泰宁", "宁德", "武夷山", "瑞金", "惠州", "赣州", "梅州"],
+  "远程": ["温州", "金华", "南昌", "抚州", "东莞"]
+};
+
+// Dynamic itinerary generation
+function generateItinerary(destName, departure, returnTime) {
+  const data = window.ITINERARY_DATA[destName];
+  if (!data) return null;
+
+  var days = [];
+  var tips = data.tips || [];
+  var baseCost = data.cost || {};
+  var hotelPerNight = baseCost["住宿"] || 200;
+  var nights = 0;
+
+  // Determine which days to show
+  var showFri = (departure === "fri_morning" || departure === "fri_afternoon");
+  var showSat = true;
+  var showSun = (returnTime === "sun_morning" || returnTime === "sun_afternoon" || returnTime === "sun_night");
+
+  // Filter Friday activities
+  if (showFri) {
+    var friDay = data.baseDays.find(function(d) { return d.dayKey === "fri_afternoon"; });
+    if (friDay) {
+      var friActivities = friDay.activities.slice();
+      if (departure === "fri_morning") {
+        // Add morning activity placeholder
+        friActivities.unshift({time: "09:00", title: "早到待处", desc: "提前到达，可先去酒店放行李"});
+      }
+      days.push({dayLabel: "周五", activities: friActivities});
+      nights++;
+    }
+  }
+
+  // Filter Saturday activities
+  if (showSat) {
+    var satDay = data.baseDays.find(function(d) { return d.dayKey === "sat"; });
+    if (satDay) {
+      var satActivities = satDay.activities.slice();
+      // If departure is sat_afternoon, filter out morning activities (time < 13:00)
+      if (departure === "sat_afternoon") {
+        satActivities = satActivities.filter(function(a) {
+          var hour = parseInt(a.time.split(":")[0]);
+          return hour >= 13;
+        });
+      }
+      // If return is sat_night, cut activities at 18:00
+      if (returnTime === "sat_night") {
+        satActivities = satActivities.filter(function(a) {
+          var hour = parseInt(a.time.split(":")[0]);
+          return hour < 18;
+        });
+        satActivities.push({time: "18:00", title: "返程", desc: "动车/驾车返回厦门"});
+      }
+      if (satActivities.length > 0) {
+        days.push({dayLabel: "周六", activities: satActivities});
+        if (returnTime !== "sat_night") {
+          nights++;
+        }
+      }
+    }
+  }
+
+  // Filter Sunday activities
+  if (showSun) {
+    var sunDay = data.baseDays.find(function(d) { return d.dayKey === "sun"; });
+    if (sunDay) {
+      var sunActivities = sunDay.activities.slice();
+      // If return is sun_morning, only show morning activities (time < 12:00)
+      if (returnTime === "sun_morning") {
+        sunActivities = sunActivities.filter(function(a) {
+          var hour = parseInt(a.time.split(":")[0]);
+          return hour < 12;
+        });
+        sunActivities.push({time: "12:00", title: "返程", desc: "动车/驾车返回厦门"});
+      }
+      // If return is sun_afternoon, only show activities before 15:00
+      if (returnTime === "sun_afternoon") {
+        sunActivities = sunActivities.filter(function(a) {
+          var hour = parseInt(a.time.split(":")[0]);
+          return hour < 15;
+        });
+        sunActivities.push({time: "15:00", title: "返程", desc: "动车/驾车返回厦门"});
+      }
+      if (returnTime === "sun_night") {
+        sunActivities.push({time: "18:00", title: "返程", desc: "动车/驾车返回厦门"});
+      }
+      if (sunActivities.length > 0) {
+        days.push({dayLabel: "周日", activities: sunActivities});
+      }
+    }
+  }
+
+  // Calculate cost
+  var totalHotel = hotelPerNight * nights;
+  var totalCost = baseCost["交通"] + totalHotel + baseCost["餐饮"] + baseCost["门票"];
+  var cost = {
+    "交通": baseCost["交通"],
+    "住宿": totalHotel,
+    "餐饮": baseCost["餐饮"],
+    "门票": baseCost["门票"],
+    "总计": totalCost
+  };
+
+  return {days: days, tips: tips, cost: cost, nights: nights};
+}
+
+// Main App
+function App() {
+  const [departure, setDeparture] = useState("fri_afternoon");
+  const [returnTime, setReturnTime] = useState("sun_night");
+  const [distanceFilter, setDistanceFilter] = useState(null);
+  const [visited, setVisited] = useState(JSON.parse(localStorage.getItem("wknd_visited") || "[]"));
+  const [result, setResult] = useState(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalData, setModalData] = useState(null);
+  const drawTimerRef = useRef(null);
+
+  const allCities = Object.keys(window.ITINERARY_DATA);
+
+  const filteredCities = allCities.filter(function(city) {
+    if (distanceFilter && DISTANCE_MAP[distanceFilter]) {
+      return DISTANCE_MAP[distanceFilter].indexOf(city) !== -1;
+    }
+    return true;
+  });
+
+  const availableCities = filteredCities.filter(function(city) {
+    return visited.indexOf(city) === -1;
+  });
+
+  const toggleVisited = function(city) {
+    var newList = visited.indexOf(city) === -1
+      ? visited.concat([city])
+      : visited.filter(function(c) { return c !== city; });
+    setVisited(newList);
+    localStorage.setItem("wknd_visited", JSON.stringify(newList));
+  };
+
+  const draw = function() {
+    if (availableCities.length === 0 || isDrawing) return;
+    setIsDrawing(true);
+    setResult(null);
+
+    var count = 0;
+    var total = 15;
+    drawTimerRef.current = setInterval(function() {
+      var randomCity = availableCities[Math.floor(Math.random() * availableCities.length)];
+      setResult({city: randomCity, phase: "drawing"});
+      count++;
+      if (count >= total) {
+        clearInterval(drawTimerRef.current);
+        var finalCity = availableCities[Math.floor(Math.random() * availableCities.length)];
+        setResult({city: finalCity, phase: "done"});
+        setIsDrawing(false);
+      }
+    }, 100);
+  };
+
+  const viewItinerary = function(city) {
+    var data = generateItinerary(city, departure, returnTime);
+    if (data) {
+      setModalData({city: city, itinerary: data});
+      setShowModal(true);
+    }
+  };
+
+  const closeModal = function() {
+    setShowModal(false);
+    setModalData(null);
+  };
+
+  var departLabel = window.DEPARTURE_OPTIONS.find(function(o) { return o.value === departure; });
+  var returnLabel = window.RETURN_OPTIONS.find(function(o) { return o.value === returnTime; });
+
+  return (
+    <div className="app-container">
+      <div className="header">
+        <h1>✈ 周末抽签应用 v2</h1>
+        <p>从厦门出发，随机抽取一个周末目的地</p>
+      </div>
+
+      {/* Time Selector */}
+      <div className="card">
+        <div className="section-title"><span className="icon">⏰</span> 出发时间</div>
+        <div className="time-selector">
+          {window.DEPARTURE_OPTIONS.map(function(opt) {
+            return (
+              <div
+                key={opt.value}
+                className={"time-option" + (departure === opt.value ? " selected" : "")}
+                onClick={function() { setDeparture(opt.value); }}
+              >
+                <div className="label">{opt.label}</div>
+                <div className="desc">{opt.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="section-title"><span className="icon">🏁</span> 回程时间</div>
+        <div className="time-selector">
+          {window.RETURN_OPTIONS.map(function(opt) {
+            return (
+              <div
+                key={opt.value}
+                className={"time-option" + (returnTime === opt.value ? " selected" : "")}
+                onClick={function() { setReturnTime(opt.value); }}
+              >
+                <div className="label">{opt.label}</div>
+                <div className="desc">{opt.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="card" style={{padding: "16px"}}>
+        <div className="stats-bar">
+          <div className="stat-item">
+            <div className="stat-value">{allCities.length}</div>
+            <div className="stat-label">总城市</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">{visited.length}</div>
+            <div className="stat-label">已去过</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">{availableCities.length}</div>
+            <div className="stat-label">可抽取</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">{departLabel ? departLabel.label : ""} - {returnLabel ? returnLabel.label : ""}</div>
+            <div className="stat-label">行程时间</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div className="card">
+        <div className="section-title"><span className="icon">🔍</span> 距离筛选</div>
+        <div className="filter-bar">
+          <div
+            className={"filter-tag" + (distanceFilter === null ? " active" : "")}
+            onClick={function() { setDistanceFilter(null); }}
+          >全部</div>
+          {DISTANCE_TAGS.map(function(tag) {
+            return (
+              <div
+                key={tag}
+                className={"filter-tag" + (distanceFilter === tag ? " active" : "")}
+                onClick={function() { setDistanceFilter(tag); }}
+              >{tag} ({DISTANCE_MAP[tag].length})</div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* City Grid */}
+      <div className="card">
+        <div className="section-title"><span className="icon">🏙</span> 目的地城市 <span style={{fontSize:"12px",color:"#aaa",fontWeight:"400"}}>点击标记已去过</span></div>
+        <div className="city-grid">
+          {filteredCities.map(function(city) {
+            var meta = CITY_META[city] || {};
+            var isVisited = visited.indexOf(city) !== -1;
+            return (
+              <div
+                key={city}
+                className={"city-card" + (isVisited ? " visited" : "")}
+                onClick={function() { toggleVisited(city); }}
+              >
+                <div className="city-name">{city}</div>
+                <div className="city-info">{meta.train || ""} / {meta.price ? "¥" + meta.price : ""}</div>
+                <div className="city-tags">
+                  {(meta.tags || []).map(function(t) {
+                    return <span key={t} className="city-tag">{t}</span>;
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Draw Button */}
+      <button
+        className="draw-btn"
+        onClick={draw}
+        disabled={availableCities.length === 0 || isDrawing}
+      >
+        {isDrawing ? "🎲 抽签中..." :
+         availableCities.length === 0 ? "所有城市都去过了！" :
+         "🎲 开始抽签！"}
+      </button>
+
+      {/* Result */}
+      {result && (
+        <div className="card result-area">
+          {result.phase === "drawing" ? (
+            <div>
+              <div style={{fontSize: "14px", color: "#aaa"}}>抽签中...</div>
+              <div className="result-destination" key={result.city}>{result.city}</div>
+            </div>
+          ) : (
+            <div>
+              <div style={{fontSize: "14px", color: "#aaa"}}>🎉 本周末去</div>
+              <div className="result-destination">{result.city}</div>
+              <div className="result-subtitle">
+                {CITY_META[result.city] ? CITY_META[result.city].train + " / ¥" + CITY_META[result.city].price : ""}
+                {" | " + departLabel.label + " - " + returnLabel.label}
+              </div>
+              <button className="view-itinerary-btn" onClick={function() { viewItinerary(result.city); }}>
+                📋 查看行程安排
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {availableCities.length === 0 && !result && (
+        <div className="card">
+          <div className="empty-state">
+            <div className="emoji">🎉</div>
+            <p>太棒了！所有城市都去过了！</p>
+            <p style={{fontSize: "12px", color: "#ccc", marginTop: "8px"}}>点击城市卡片可以取消标记</p>
+          </div>
+        </div>
+      )}
+
+      {/* Itinerary Modal */}
+      {showModal && modalData && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={function(e) { e.stopPropagation(); }}>
+            <div className="modal-header">
+              <h2>{modalData.city} 行程安排</h2>
+              <button className="modal-close" onClick={closeModal}>×</button>
+            </div>
+
+            <div style={{fontSize: "13px", color: "#888", marginBottom: "16px"}}>
+              {departLabel.label} 出发 → {returnLabel.label} 回程
+              {modalData.itinerary.nights > 0 ? " | " + modalData.itinerary.nights + "晚住宿" : " | 无需住宿"}
+            </div>
+
+            {/* Timeline */}
+            {modalData.itinerary.days.map(function(day, idx) {
+              return (
+                <div key={idx} className="day-section">
+                  <div className="day-label">{day.dayLabel}</div>
+                  {day.activities.map(function(act, aidx) {
+                    return (
+                      <div key={aidx} className="activity-item">
+                        <div className="activity-time">{act.time}</div>
+                        <div className="activity-detail">
+                          <div className="activity-title">{act.title}</div>
+                          <div className="activity-desc">{act.desc}</div>
+                          {act.food && <span className="activity-food">🍽 美食</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+
+            {/* Cost */}
+            <div className="cost-section">
+              <div className="cost-title">💰 预估费用</div>
+              <div className="cost-grid">
+                {Object.keys(modalData.itinerary.cost).map(function(key) {
+                  var isTotal = key === "总计";
+                  return (
+                    <div key={key} className={"cost-item" + (isTotal ? " total" : "")}>
+                      <div className="cost-label">{key}</div>
+                      <div className="cost-value">¥{modalData.itinerary.cost[key]}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Tips */}
+            <div className="tips-section">
+              <div className="tips-title">💡 实用贴士</div>
+              {modalData.itinerary.tips.map(function(tip, idx) {
+                return <div key={idx} className="tip-item">{tip}</div>;
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Render
+var root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
