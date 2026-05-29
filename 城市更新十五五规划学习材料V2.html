@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城市更新"十五五"规划 · 可视化学习材料</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1E3A5F;
+            --primary-light: #2E4A6F;
+            --accent: #C75B39;
+            --accent-light: #D97B5A;
+            --bg-warm: #FAF8F5;
+            --bg-card: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #5A5A5A;
+            --border: #E5E2DE;
+            --success: #2D6A4F;
+            --warning: #B8860B;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-warm);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        
+        .serif {
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        /* 导航 */
+        .nav-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(250, 248, 245, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 0.05em;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-link {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: var(--accent);
+        }
+        
+        /* 主容器 */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 6rem 2rem 4rem;
+        }
+        
+        /* Hero区域 */
+        .hero {
+            text-align: center;
+            padding: 4rem 0 3rem;
+            border-bottom: 2px solid var(--primary);
+            margin-bottom: 3rem;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.4rem 1rem;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            letter-spacing: 0.02em;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+        
+        .hero-meta {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .hero-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* 章节标题 */
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 3rem 0 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--accent);
+            display: inline-block;
+        }
+        
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        /* 卡片 */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-highlight {
+            border-left: 4px solid var(--accent);
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* 数据指标 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .metric-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+        }
+        
+        .metric-unit {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        
+        /* 时间线 */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--primary);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.3rem;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-left: -5px;
+        }
+        
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .timeline-content {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+        
+        /* 任务清单 */
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-number {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .task-content h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.3rem;
+        }
+        
+        .task-content p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        /* 厦门专题 */
+        .xiamen-section {
+            background: linear-gradient(135deg, #1E3A5F 0%, #2E4A6F 100%);
+            color: white;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+        
+        .xiamen-section .section-title {
+            color: white;
+            border-bottom-color: #D97B5A;
+        }
+        
+        .xiamen-section .card {
+            background: rgba(255,255,255,0.95);
+            color: var(--text-primary);
+        }
+        
+        /* 标签 */
+        .tag {
+            display: inline-block;
+            background: var(--bg-warm);
+            border: 1px solid var(--border);
+            padding: 0.2rem 0.6rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tag-highlight {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        
+        /* 引用 */
+        .quote {
+            border-left: 4px solid var(--accent);
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+        
+        .quote-author {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-style: normal;
+        }
+        
+        /* 两栏布局 */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .hero-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: center;
+            }
+            
+            /* 手机端：隐藏顶部导航链接，改用底部固定栏 */
+            .nav-links {
+                display: none;
+            }
+            
+            .nav-container {
+                padding: 0.8rem 1rem;
+            }
+            
+            .nav-title {
+                font-size: 0.95rem;
+            }
+            
+            .main-container {
+                padding: 5rem 1rem 6rem;
+            }
+            
+            .section-title {
+                font-size: 1.4rem;
+            }
+            
+            .card {
+                padding: 1.2rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .metric-number {
+                font-size: 2rem;
+            }
+            
+            /* 底部固定导航栏（仅手机端显示） */
+            .mobile-nav {
+                display: flex !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(30, 58, 95, 0.97);
+                backdrop-filter: blur(10px);
+                z-index: 1000;
+                padding: 0;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+            }
+            
+            .mobile-nav-item {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 0.6rem 0.2rem 0.8rem;
+                color: rgba(255,255,255,0.6);
+                font-size: 0.65rem;
+                cursor: pointer;
+                transition: color 0.2s;
+                border: none;
+                background: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            .mobile-nav-item.active {
+                color: #D97B5A;
+            }
+            
+            .mobile-nav-icon {
+                font-size: 1.2rem;
+                margin-bottom: 0.2rem;
+            }
+        }
+        
+        /* 底部导航栏默认隐藏（仅手机端显示） */
+        .mobile-nav {
+            display: none;
+        }
+        
+        /* 隐藏/显示 */
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        /* 图表容器 */
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        /* 进度条 */
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            margin: 1rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+        }
+        
+        /* 重点框 */
+        .highlight-box {
+            background: #FEF3E8;
+            border: 1px solid #F5D5A8;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .highlight-box-title {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // 导航组件
+        function Navigation({ activeSection, setActiveSection }) {
+            const sections = [
+                { id: 'overview', label: '概览', icon: '📋' },
+                { id: 'targets', label: '指标', icon: '📊' },
+                { id: 'tasks', label: '任务', icon: '🎯' },
+                { id: 'xiamen', label: '厦门', icon: '🏝️' },
+                { id: 'investment', label: '投融资', icon: '💰' }
+            ];
+            
+            const desktopSections = [
+                { id: 'overview', label: '政策概览' },
+                { id: 'targets', label: '核心指标' },
+                { id: 'tasks', label: '重点任务' },
+                { id: 'xiamen', label: '厦门专题' },
+                { id: 'investment', label: '投融资机制' }
+            ];
+            
+            return (
+                <React.Fragment>
+                    <nav className="nav-fixed">
+                        <div className="nav-container">
+                            <div className="nav-title">城市更新"十五五"规划</div>
+                            <div className="nav-links">
+                                {desktopSections.map(section => (
+                                    <a 
+                                        key={section.id}
+                                        className={`nav-link ${activeSection === section.id ? 'active' : ''}`}
+                                        onClick={() => setActiveSection(section.id)}
+                                    >
+                                        {section.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    </nav>
+                    
+                    {/* 手机端底部固定导航栏 */}
+                    <div className="mobile-nav">
+                        {sections.map(section => (
+                            <button
+                                key={section.id}
+                                className={`mobile-nav-item ${activeSection === section.id ? 'active' : ''}`}
+                                onClick={() => setActiveSection(section.id)}
+                            >
+                                <span className="mobile-nav-icon">{section.icon}</span>
+                                <span>{section.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </React.Fragment>
+            );
+        }
+        
+        // Hero区域
+        function Hero() {
+            return (
+                <div className="hero">
+                    <div className="hero-badge">国务院发布 · 国发〔2026〕12号</div>
+                    <h1 className="serif">城市更新"十五五"规划</h1>
+                    <p className="hero-subtitle">
+                        贯彻落实党中央、国务院关于高质量推进城市更新的决策部署，
+                        建立可持续的城市更新体制机制和政策法规体系
+                    </p>
+                    <div className="hero-meta">
+                        <span>📅 发布日期：2026年5月28日</span>
+                        <span>📋 成文日期：2026年5月22日</span>
+                        <span>🏛️ 发文机关：国务院</span>
+                    </div>
+                </div>
+            );
+        }
+        
+        // 政策概览
+        function OverviewSection() {
+            return (
+                <div>
+                    <Hero />
+                    
+                    <h2 className="section-title serif">一、总体要求与目标</h2>
+                    
+                    <div className="card card-highlight">
+                        <div className="card-title">📌 指导思想</div>
+                        <p>坚持以习近平新时代中国特色社会主义思想为指导，深入贯彻党的二十大和二十届历次全会精神，
+                        完整准确全面贯彻新发展理念，坚持以人民为中心，坚持系统观念，坚持规划引领，
+                        坚持统筹发展和安全，坚持保护第一、应保尽保、以用促保。</p>
+                    </div>
+                    
+                    <div className="two-col">
+                        <div className="card">
+                            <div className="card-title">🎯 2030年目标</div>
+                            <ul style={{paddingLeft: '1.5rem', color: 'var(--text-secondary)'}}>
+                                <li>城市更新行动取得重要进展</li>
+                                <li>城市开发建设方式转型初见成效</li>
+                                <li>安全发展基础更加牢固</li>
+                                <li>服务效能不断提高</li>
+                                <li>人居环境明显改善</li>
+                                <li>新旧动能加快转换</li>
+                                <li>文化遗产有效保护</li>
+                                <li>风貌特色更加彰显</li>
+                            </ul>
+                        </div>
+                        
+                        <div className="card">
+                            <div className="card-title">🌟 2035年愿景</div>
+                            <ul style={{paddingLeft: '1.5rem', color: 'var(--text-secondary)'}}>
+                                <li>城市更新体制机制更加完善</li>
+                                <li>城市结构优化取得显著成效</li>
+                                <li>动能转换全面完成</li>
+                                <li>品质提升目标实现</li>
+                                <li>绿色转型深入推进</li>
+                                <li>文脉赓续有效传承</li>
+                                <li>治理增效大幅提升</li>
+                                <li style={{color: 'var(--accent)', fontWeight: 600}}>
+                                    创新、宜居、美丽、韧性、文明、智慧的现代化人民城市基本建成
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <h2 className="section-title serif" style={{marginTop: '3rem'}}>二、政策演进时间线</h2>
+                    
+                    <div className="timeline">
+                        <div className="timeline-item">
+                            <div className="timeline-date">2025年5月2日</div>
+                            <div className="timeline-content">
+                                <strong>中办、国办印发《关于持续推进城市更新行动的意见》</strong><br/>
+                                提出到2030年城市更新行动实施取得重要进展，建立可持续的城市更新模式
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-date">2025年5月15日</div>
+                            <div className="timeline-content">
+                                <strong>国务院常务会议审议通过《城市更新"十五五"规划》</strong><br/>
+                                明确城市更新"任务书"，强调当前城市发展正从大规模增量扩张转向存量提质增效
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-date">2026年5月22日</div>
+                            <div className="timeline-content">
+                                <strong>国务院正式印发《城市更新"十五五"规划》</strong><br/>
+                                国发〔2026〕12号文件，标志着城市更新进入系统性推进新阶段
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-date">2026年5月28日</div>
+                            <div className="timeline-content">
+                                <strong>文件公开发布，明确各项量化指标</strong><br/>
+                                包括危旧房改造、老旧小区改造、城中村改造、地下管网改造等具体目标
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // 核心指标
+        function TargetsSection() {
+            const metrics = [
+                { number: '50', unit: '万套/间', label: '城镇危旧房改造', desc: '以国有土地上C、D级危险住房为重点' },
+                { number: '11.5', unit: '万个', label: '城镇老旧小区改造', desc: '新开工改造城镇老旧小区' },
+                { number: '4000', unit: '个', label: '城中村改造', desc: '推进城中村改造提升' },
+                { number: '36.5', unit: '万公里', label: '城市地下管网改造', desc: '燃气、供排水、供热等管网' },
+                { number: '1500', unit: '个', label: '老旧街区厂区改造', desc: '以市场化方式盘活利用' },
+                { number: '5', unit: '万亿元', label: '地下管网投资', desc: '"十五五"期间预计投资规模' }
+            ];
+            
+            return (
+                <div>
+                    <h2 className="section-title serif">三、"十五五"核心指标</h2>
+                    <p className="section-subtitle">规划明确了六大类量化目标，涵盖住房安全、基础设施、城市功能等多个维度</p>
+                    
+                    <div className="metrics-grid">
+                        {metrics.map((metric, index) => (
+                            <div key={index} className="metric-card">
+                                <div className="metric-number">{metric.number}</div>
+                                <div className="metric-unit">{metric.unit}</div>
+                                <div style={{fontWeight: 600, color: 'var(--primary)', marginTop: '0.5rem'}}>
+                                    {metric.label}
+                                </div>
+                                <div className="metric-label">{metric.desc}</div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="highlight-box">
+                        <div className="highlight-box-title">💡 重点解读</div>
+                        <p>地下管网建设改造是"十五五"期间的重中之重。预计投资约<strong>5万亿元</strong>，
+                        建设改造燃气、供排水、供热等管网约<strong>77万公里</strong>，加快补齐城市地下管网建设的薄弱环节，
+                        提升城市基础设施安全韧性。</p>
+                    </div>
+                    
+                    <h3 style={{fontSize: '1.3rem', color: 'var(--primary)', margin: '2rem 0 1rem'}}>地下管网建设具体目标</h3>
+                    
+                    <div className="card">
+                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem'}}>
+                            {[
+                                { type: '燃气管网', length: '20万公里', color: '#C75B39' },
+                                { type: '排水管网', length: '17.5万公里', color: '#1E3A5F' },
+                                { type: '供水管网', length: '17.5万公里', color: '#2D6A4F' },
+                                { type: '污水管网', length: '10万公里', color: '#5A5A5A' },
+                                { type: '供热管网', length: '12万公里', color: '#B8860B' }
+                            ].map((item, idx) => (
+                                <div key={idx} style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+                                    <div style={{
+                                        width: '12px', 
+                                        height: '12px', 
+                                        background: item.color,
+                                        borderRadius: '50%'
+                                    }}></div>
+                                    <div>
+                                        <div style={{fontWeight: 600}}>{item.type}</div>
+                                        <div style={{color: 'var(--text-secondary)', fontSize: '0.9rem'}}>{item.length}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <p style={{marginTop: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                            同步推进智慧化改造，因地制宜建设综合管廊
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+        
+        // 重点任务
+        function TasksSection() {
+            const tasks = [
+                {
+                    title: '培育壮大城市发展新动能',
+                    items: [
+                        { title: '增强城市发展动力', desc: '推动城市特色化发展，推进超大特大城市治理现代化，精心培育创新生态，发展新质生产力' },
+                        { title: '激活城市存量资源潜力', desc: '全面摸清城市存量资产资源底数，盘活闲置低效的老旧厂房、商业办公用房、商品住房等' },
+                        { title: '提升城市对外开放合作水平', desc: '建设国际门户枢纽城市和区域性开放节点城市，推进高质量共建"一带一路"' }
+                    ]
+                },
+                {
+                    title: '营造高品质城市生活空间',
+                    items: [
+                        { title: '推进"好房子"建设', desc: '建设改造安全舒适绿色智慧的"好房子"，推广装配式装修和适老化、无障碍改造' },
+                        { title: '持续推动城镇老旧小区改造', desc: '重点对建成20年及以上的城镇住宅小区开展专项体检，补齐基础设施短板' },
+                        { title: '开展完整社区建设', desc: '建设安全健康、设施完善、管理有序的完整社区，构建城市一刻钟便民生活圈' },
+                        { title: '推进老旧街区、老旧厂区、城中村等更新改造', desc: '因地制宜打造活力街区，"一村一策"实施城中村改造，不搞大拆大建' }
+                    ]
+                },
+                {
+                    title: '推动城市发展绿色低碳转型',
+                    items: [
+                        { title: '推进既有建筑节能改造', desc: '持续推进既有居住建筑和公共建筑节能改造，加强建筑保温材料管理' },
+                        { title: '推广绿色建材', desc: '应用性能优异的新型建材，推动建筑领域绿色低碳发展' }
+                    ]
+                },
+                {
+                    title: '增强城市安全韧性',
+                    items: [
+                        { title: '危险住房改造', desc: '加快拆除改造D级危险住房，积极稳妥实施C级危险住房改造' },
+                        { title: '抗震加固', desc: '分类分批对存在抗震安全隐患且具备加固价值的城镇房屋进行抗震加固' },
+                        { title: '历史文化保护', desc: '落实"老城不能再拆"要求，严禁以危险住房名义违法违规拆除改造历史文化街区' }
+                    ]
+                }
+            ];
+            
+            return (
+                <div>
+                    <h2 className="section-title serif">四、重点任务体系</h2>
+                    
+                    {tasks.map((category, catIndex) => (
+                        <div key={catIndex}>
+                            <h3 style={{fontSize: '1.3rem', color: 'var(--primary)', margin: '2rem 0 1rem', 
+                                       paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)'}}>
+                                {category.title}
+                            </h3>
+                            <ul className="task-list">
+                                {category.items.map((item, itemIndex) => (
+                                    <li key={itemIndex} className="task-item">
+                                        <div className="task-number">{catIndex + 1}.{itemIndex + 1}</div>
+                                        <div className="task-content">
+                                            <h4>{item.title}</h4>
+                                            <p>{item.desc}</p>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                    
+                    <div className="quote" style={{marginTop: '3rem'}}>
+                        "城市是现代化建设的重要载体、人民幸福生活的重要空间。"
+                        <div className="quote-author">——《城市更新"十五五"规划》开篇</div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // 投融资机制
+        function InvestmentSection() {
+            return (
+                <div>
+                    <h2 className="section-title serif">五、投融资机制创新</h2>
+                    
+                    <div className="highlight-box">
+                        <div className="highlight-box-title">💰 重大政策突破</div>
+                        <p>允许通过<strong>地方政府专项债券</strong>支持符合条件的城市更新项目建设，
+                        <strong>支持用作项目资本金</strong>。新型政策性金融工具同样也是城市更新项目资本金的重要来源。</p>
+                    </div>
+                    
+                    <div className="two-col">
+                        <div className="card">
+                            <div className="card-title">🏛️ 财政支持政策</div>
+                            <ul style={{paddingLeft: '1.5rem', color: 'var(--text-secondary)', lineHeight: '2'}}>
+                                <li>中央预算内投资对符合条件的项目给予支持</li>
+                                <li>中央财政支持实施城市更新行动</li>
+                                <li>允许专项债支持城市更新项目建设</li>
+                                <li>支持专项债用作项目资本金</li>
+                                <li>地方政府加大财政投入</li>
+                                <li>落实城市更新相关税费减免政策</li>
+                            </ul>
+                        </div>
+                        
+                        <div className="card">
+                            <div className="card-title">🏦 金融支持政策</div>
+                            <ul style={{paddingLeft: '1.5rem', color: 'var(--text-secondary)', lineHeight: '2'}}>
+                                <li>发挥各类金融机构作用</li>
+                                <li>引导金融机构提供市场化金融服务</li>
+                                <li>不得新增地方政府隐性债务</li>
+                                <li>允许采用综合开发、银团贷款等模式</li>
+                                <li>探索金融支持城镇老旧住房自主更新</li>
+                                <li>探索原拆原建的有效举措</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <h3 style={{fontSize: '1.2rem', color: 'var(--primary)', margin: '2rem 0 1rem'}}>社会资本参与机制</h3>
+                    
+                    <div className="card">
+                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem'}}>
+                            <div>
+                                <div style={{fontWeight: 600, color: 'var(--accent)', marginBottom: '0.5rem'}}>📈 REITs与资产证券化</div>
+                                <p style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                    推动符合条件的城市更新项目发行基础设施领域不动产投资信托基金(REITs)、资产证券化产品等
+                                </p>
+                            </div>
+                            <div>
+                                <div style={{fontWeight: 600, color: 'var(--accent)', marginBottom: '0.5rem'}}>📋 债券融资</div>
+                                <p style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                    支持符合条件的城市更新企业发行公司债券、中期票据等
+                                </p>
+                            </div>
+                            <div>
+                                <div style={{fontWeight: 600, color: 'var(--accent)', marginBottom: '0.5rem'}}>🤝 合理共担机制</div>
+                                <p style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                    按照"谁受益、谁出资"原则，构建政府、市场、居民资金合理共担机制
+                                </p>
+                            </div>
+                            <div>
+                                <div style={{fontWeight: 600, color: 'var(--accent)', marginBottom: '0.5rem'}}>🏗️ PPP新机制</div>
+                                <p style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                    规范实施政府和社会资本合作新机制，鼓励民营企业积极参与
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="card" style={{background: '#F0F7F4', borderColor: '#2D6A4F'}}>
+                        <div className="card-title" style={{color: '#2D6A4F'}}>📊 2026年一季度数据</div>
+                        <p>城市更新相关<strong>专项债券发行接近1200亿元</strong>，显示政策落地速度加快，
+                        市场参与热情高涨。预计随着专项债可用作资本金的政策落地，将撬动更多社会资本进入城市更新领域。</p>
+                    </div>
+                </div>
+            );
+        }
+        
+        // 厦门专题
+        function XiamenSection() {
+            return (
+                <div>
+                    <div className="xiamen-section">
+                        <h2 className="section-title serif">厦门城市更新专题分析</h2>
+                        <p style={{opacity: 0.9, marginBottom: '2rem'}}>
+                            结合国家"十五五"规划，分析厦门城市更新的独特优势与发展机遇
+                        </p>
+                        
+                        <div className="two-col">
+                            <div className="card">
+                                <div className="card-title">🎯 厦门"十五五"定位</div>
+                                <p style={{marginBottom: '1rem'}}>厦门"十五五"规划纲要提出<strong>"3+1"城市发展转型升级总体框架</strong>：</p>
+                                <ul style={{paddingLeft: '1.5rem', color: 'var(--text-secondary)'}}>
+                                    <li>功能定位转型</li>
+                                    <li>经济结构升级</li>
+                                    <li>空间格局调整</li>
+                                    <li>全面深化改革（根本动力）</li>
+                                </ul>
+                                <div style={{marginTop: '1rem', padding: '1rem', background: '#F5F5F5', fontSize: '0.9rem'}}>
+                                    <strong>2030目标：</strong>人均GDP 20.4万元，人类发展指数(HDI) 0.935，达到发达国家水平
+                                </div>
+                            </div>
+                            
+                            <div className="card">
+                                <div className="card-title">📜 制度创新优势</div>
+                                <p style={{marginBottom: '1rem'}}>厦门在城市更新领域已形成完善的法规体系：</p>
+                                <ul style={{paddingLeft: '1.5rem', color: 'var(--text-secondary)'}}>
+                                    <li><strong>2025年3月1日</strong>《厦门经济特区城市更新条例》正式施行</li>
+                                    <li>共七章四十九条，构建可持续发展模式</li>
+                                    <li>确立"整治提升、拆除新建、拆整结合"三种更新情形</li>
+                                    <li>建立"体检评估-专项规划-更新计划-策划方案-详细规划"五级传导体系</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style={{fontSize: '1.4rem', color: 'var(--primary)', margin: '2rem 0 1rem'}}>厦门城市更新特色实践</h3>
+                    
+                    <div className="card card-highlight">
+                        <div className="card-title">🏘️ 城中村现代化治理"厦门模式"</div>
+                        <div className="two-col" style={{marginTop: '1rem'}}>
+                            <div>
+                                <p style={{marginBottom: '1rem'}}><strong>全域覆盖：</strong>全市108个城中村全部纳入现代化治理范畴</p>
+                                <p style={{marginBottom: '1rem'}}><strong>经济成效：</strong>绝大部分行政村集体经济收入超50万元</p>
+                                <p><strong>治理理念：</strong>从"硬件"到"软件"，从"单点改造"到"生态营造"</p>
+                            </div>
+                            <div>
+                                <div style={{background: '#F5F5F5', padding: '1rem', borderRadius: '4px'}}>
+                                    <div style={{fontWeight: 600, color: 'var(--accent)', marginBottom: '0.5rem'}}>典型案例：后田社区</div>
+                                    <p style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                        收储72栋古厝，引进52家非遗和艺术工作室，形成多业态产业集群，
+                                        预计年利润达500万元。实现从"吃完就走"到"愿意留下来"的转变。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style={{fontSize: '1.4rem', color: 'var(--primary)', margin: '2rem 0 1rem'}}>厦门对接国家规划的机遇与建议</h3>
+                    
+                    <div className="metrics-grid">
+                        <div className="card" style={{textAlign: 'left'}}>
+                            <div className="card-title">💡 机遇一：专项债政策红利</div>
+                            <p style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                国家允许专项债用作城市更新项目资本金，厦门可充分利用已建立的成熟项目库，
+                                争取更多中央资金支持。建议梳理符合条件的地下管网、老旧小区改造项目，
+                                积极申报专项债。
+                            </p>
+                        </div>
+                        
+                        <div className="card" style={{textAlign: 'left'}}>
+                            <div className="card-title">💡 机遇二：两岸融合特色</div>
+                            <p style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                厦门对台贸易额从402亿元增至521亿元，现有台资企业超6000家。
+                                可在城市更新中探索两岸标准共通、台胞参与社区治理等创新模式，
+                                打造两岸融合发展的城市更新样板。
+                            </p>
+                        </div>
+                        
+                        <div className="card" style={{textAlign: 'left'}}>
+                            <div className="card-title">💡 机遇三：金砖创新基地</div>
+                            <p style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                依托金砖国家新工业革命伙伴关系创新基地，引入国际先进城市更新理念和技术，
+                                在老旧厂区改造中植入国际化创新业态，提升城市国际影响力。
+                            </p>
+                        </div>
+                        
+                        <div className="card" style={{textAlign: 'left'}}>
+                            <div className="card-title">💡 机遇四：海洋城市特色</div>
+                            <p style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                                发挥海洋负排放国际大科学计划优势，在城市更新中融入海洋生态保护、
+                                滨海景观提升等元素，打造"山海城"融合的宜居城市典范。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div className="highlight-box">
+                        <div className="highlight-box-title">📝 对厦门城市更新工作的具体建议</div>
+                        <ol style={{paddingLeft: '1.5rem', color: 'var(--text-secondary)', lineHeight: '2'}}>
+                            <li><strong>建立城市更新项目储备库</strong>：对接国家"十五五"规划指标，提前谋划危旧房改造、地下管网更新等项目</li>
+                            <li><strong>创新投融资模式</strong>：积极争取专项债用作资本金，探索REITs、PPP等多元化融资渠道</li>
+                            <li><strong>深化城中村治理</strong>：将后田经验推广至更多城中村，实现"一村一特色"的差异化发展</li>
+                            <li><strong>强化历史文化保护</strong>：落实"老城不能再拆"要求，在城市更新中赓续厦门文脉</li>
+                            <li><strong>推进智慧城市建设</strong>：同步推进地下管网智慧化改造，建设城市信息模型(CIM)平台</li>
+                            <li><strong>探索两岸融合路径</strong>：吸引台胞参与社区治理，打造台胞台企登陆第一家园的示范区</li>
+                        </ol>
+                    </div>
+                </div>
+            );
+        }
+        
+        // 主应用
+        function App() {
+            const [activeSection, setActiveSection] = useState('overview');
+            
+            useEffect(() => {
+                // 切换section时滚动到顶部
+                window.scrollTo(0, 0);
+            }, [activeSection]);
+            
+            return (
+                <div>
+                    <Navigation activeSection={activeSection} setActiveSection={setActiveSection} />
+                    
+                    <div className="main-container">
+                        <div className={activeSection === 'overview' ? 'content-section active' : 'content-section'}>
+                            <OverviewSection />
+                        </div>
+                        
+                        <div className={activeSection === 'targets' ? 'content-section active' : 'content-section'}>
+                            <TargetsSection />
+                        </div>
+                        
+                        <div className={activeSection === 'tasks' ? 'content-section active' : 'content-section'}>
+                            <TasksSection />
+                        </div>
+                        
+                        <div className={activeSection === 'investment' ? 'content-section active' : 'content-section'}>
+                            <InvestmentSection />
+                        </div>
+                        
+                        <div className={activeSection === 'xiamen' ? 'content-section active' : 'content-section'}>
+                            <XiamenSection />
+                        </div>
+                    </div>
+                    
+                    <footer style={{
+                        background: 'var(--primary)',
+                        color: 'white',
+                        padding: '2rem',
+                        textAlign: 'center',
+                        fontSize: '0.9rem'
+                    }}>
+                        <p>本材料基于国务院《城市更新"十五五"规划》（国发〔2026〕12号）及相关政策文件整理</p>
+                        <p style={{marginTop: '0.5rem', opacity: 0.7}}>仅供学习参考 · 数据来源：中国政府网、21世纪经济报道等公开渠道</p>
+                        <p style={{marginTop: '1rem', fontSize: '0.8rem', opacity: 0.5}}>
+                            Created with Huashu-Design
+                        </p>
+                    </footer>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
